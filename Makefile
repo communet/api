@@ -2,6 +2,7 @@ DC = docker compose
 EXEC = docker exec -it
 LOGS = docker logs
 APP_CONTAINER = backend
+POSTGRES_CONTAINER = postgres
 
 .PHONY: app
 app:
@@ -26,3 +27,7 @@ test:
 .PHONY: logs
 logs:
 	${DC} logs -f
+
+.PHONY: pg-logs
+pg-logs:
+	${LOGS} ${POSTGRES_CONTAINER} -f
