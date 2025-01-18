@@ -1,15 +1,19 @@
 import uvicorn
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 
 
-app = FastAPI()
+router = APIRouter()
 
 
-@app.get("/")
+@router.get("/")
 def index():
 	return {"message": "Hello World!"}
 
 
-if __name__ == "__main__":
-	uvicorn.run(app, host="0.0.0.0", port=8000)
+def create_app() -> FastAPI:
+	app = FastAPI()
+
+	app.include_router(router)
+
+	return app
