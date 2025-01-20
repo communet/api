@@ -1,8 +1,8 @@
 DC = docker compose
 EXEC = docker exec -it
 LOGS = docker logs
-APP_CONTAINER = backend
-POSTGRES_CONTAINER = postgres
+APP_CONTAINER = communet-api
+POSTGRES_CONTAINER = communet-postgres
 
 .PHONY: app
 app:

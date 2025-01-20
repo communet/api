@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "name will be here"
+name = "communet-api"
 version = "0.1.0"
-description = ""
+description = "application for communication between users"
 authors = ["Mihail <infast1k@mail.ru>"]
 readme = "README.md"
 
