@@ -29,3 +29,5 @@ The application for communication between users
 * `make test` - run tests
 * `make logs` - follow the logs in all containers
 * `make pg-logs` - follow the logs in postgres container
+* `make makemigrations` - generate new migration
+* `make migrate` - apply all migrations

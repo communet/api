@@ -31,3 +31,11 @@ logs:
 .PHONY: pg-logs
 pg-logs:
 	${LOGS} ${POSTGRES_CONTAINER} -f
+
+.PHONY: makemigrations
+makemigrations:
+	${EXEC} ${APP_CONTAINER} alembic revision --autogenerate
+
+.PHONY: migrate
+migrate:
+	${EXEC} ${APP_CONTAINER} alembic upgrade head
