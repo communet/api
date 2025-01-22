@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
+from typing import AsyncGenerator
 
 from src.settings.config import settings
 
@@ -14,17 +14,7 @@ class DatabaseManager:
             expire_on_commit=False,
         )
 
-    async def get_session(self) -> AsyncSession:
+    async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         async with self.session_factory() as session:
             yield session
             await session.close()
-
-
-class Base(DeclarativeBase):
-    def __repr__(self):
-        cols = []
-        for idx, col in enumerate(self.__table__.columns.keys()):
-            if col in self.repr_cols or idx < self.repr_cols_num:
-                cols.append(f"{col}={getattr(self, col)}")
-
-        return f"<{self.__class__.__name__} {', '.join(cols)}>"

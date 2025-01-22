@@ -10,7 +10,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from src.settings.config import settings
-from src.infra.database import Base
+from src.infra.models.base import Base
 
 # NOTE: need to import all models here with # noqa 
 
