@@ -13,6 +13,7 @@ from src.settings.config import settings
 from src.infra.models.base import Base
 
 # NOTE: need to import all models here with # noqa 
+from src.infra.models.users import CredentialsModel, ProfileModel  # noqa
 
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
