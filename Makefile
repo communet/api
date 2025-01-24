@@ -20,8 +20,8 @@ app-exec:
 app-logs:
 	${LOGS} ${APP_CONTAINER} -f
 
-.PHONY: test
-test:
+.PHONY: tests
+tests:
 	${EXEC} ${APP_CONTAINER} pytest
 
 .PHONY: logs

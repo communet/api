@@ -1,4 +1,4 @@
-# FastAPI + Kafka DDD chat Application w\ MongoDB
+# CommuNet API
 
 The application for communication between users
 
@@ -24,9 +24,9 @@ The application for communication between users
 
 * `make app` - up application and infrastructure
 * `make app-down` - down application and infrastructure
-* `make app-exec` - go to contenerized interactive shell (bash)
+* `make app-exec` - go to containerized interactive shell (bash)
 * `make app-logs` - follow the logs in app container
-* `make test` - run tests
+* `make tests` - run tests
 * `make logs` - follow the logs in all containers
 * `make pg-logs` - follow the logs in postgres container
 * `make makemigrations` - generate new migration
