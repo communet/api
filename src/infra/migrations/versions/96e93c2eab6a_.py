@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 8049e28c1644
+Revision ID: 96e93c2eab6a
 Revises: 
-Create Date: 2025-01-24 19:34:04.385147
+Create Date: 2025-01-25 17:06:51.362875
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '8049e28c1644'
+revision: str = '96e93c2eab6a'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,15 +27,20 @@ def upgrade() -> None:
     sa.Column('oid', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.PrimaryKeyConstraint('oid')
+    sa.PrimaryKeyConstraint('oid'),
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('username')
     )
     op.create_table('profiles',
     sa.Column('display_name', sa.String(length=255), nullable=False),
     sa.Column('avatar', sa.String(length=255), nullable=False),
+    sa.Column('credentials_id', sa.UUID(), nullable=False),
     sa.Column('oid', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.PrimaryKeyConstraint('oid')
+    sa.ForeignKeyConstraint(['credentials_id'], ['credentials.oid'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('oid'),
+    sa.UniqueConstraint('credentials_id')
     )
     # ### end Alembic commands ###
 
