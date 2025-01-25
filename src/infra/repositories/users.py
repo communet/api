@@ -1,4 +1,6 @@
+from abc import abstractmethod
 from dataclasses import dataclass
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,8 +11,15 @@ from src.infra.repositories.base import BaseRepository, BaseUoW
 
 
 @dataclass(eq=False, frozen=True)
-class CredentialsRepository(BaseRepository):
-    async def create(self, credentials: Credentials) -> CredentialsModel:
+class BaseCredentialsRepository(BaseRepository):
+    @abstractmethod
+    async def create(self, credentials: Credentials) -> Optional[CredentialsModel]:
+        ...
+
+
+@dataclass(eq=False, frozen=True)
+class CredentialsRepository(BaseCredentialsRepository):
+    async def create(self, credentials: Credentials) -> Optional[CredentialsModel]:
         """
         Create a new user credentials. Add user credentials model to session by UserUoW.
         :param credentials: user credentials as Credentials entity.
@@ -28,8 +37,15 @@ class CredentialsRepository(BaseRepository):
 
 
 @dataclass(eq=False, frozen=True)
-class ProfileRepository(BaseRepository):
-    async def create(self, profile: Profile) -> ProfileModel:
+class BaseProfileRepository(BaseRepository):
+    @abstractmethod
+    async def create(self, profile: Profile) -> Optional[ProfileModel]:
+        ...
+
+
+@dataclass(eq=False, frozen=True)
+class ProfileRepository(BaseProfileRepository):
+    async def create(self, profile: Profile) -> Optional[ProfileModel]:
         """
         Create a new user profile. Add user profile model to session by UserUoW.
         :param profile: user profile as Profile entity.
@@ -49,5 +65,5 @@ class ProfileRepository(BaseRepository):
 class UserUoW(BaseUoW):
     def __init__(self, session: AsyncSession = DatabaseManager().get_test_session()):
         super().__init__(session)
-        self.profile_repository = ProfileRepository(self._session)
-        self.credentials_repository = CredentialsRepository(self._session)
+        self.profile_repository: BaseProfileRepository = ProfileRepository(self._session)
+        self.credentials_repository: BaseCredentialsRepository = CredentialsRepository(self._session)
