@@ -12,9 +12,13 @@ class DatabaseManager:
             autoflush=False,
             autocommit=False,
             expire_on_commit=False,
+            class_=AsyncSession,
         )
 
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         async with self.session_factory() as session:
             yield session
             await session.close()
+
+    def get_test_session(self) -> AsyncSession:
+        return self.session_factory()
