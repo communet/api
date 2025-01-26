@@ -1,19 +1,7 @@
-import uvicorn
+from fastapi import FastAPI
 
-from fastapi import FastAPI, APIRouter
-
-
-from src.settings.config import get_settings
-
-from fastapi import Depends, FastAPI, APIRouter
+from src.application.api.auth.handlers import router as auth_router
 from src.settings.config import settings
-
-router = APIRouter()
-
-
-@router.get("/")
-def index():
-	return {"message": "Hello World!"}
 
 
 def create_app() -> FastAPI:
@@ -26,6 +14,6 @@ def create_app() -> FastAPI:
 		port=settings().API_PORT,
 	)
 
-	app.include_router(router)
+	app.include_router(router=auth_router, prefix="/api/v1")
 
 	return app
