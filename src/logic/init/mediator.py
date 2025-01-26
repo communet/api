@@ -14,7 +14,7 @@ class Mediator:
         kw_only=True,
     )
 
-    def register_command(self, command: CT, command_handlers: Iterable[CommandHandler[CT, CR]]):
+    def register_command(self, command: type(CT), command_handlers: Iterable[CommandHandler[CT, CR]]):
         """Register command handlers for command by command type"""
         self.commands_map[command].extend(command_handlers)
 

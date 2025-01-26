@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
 from src.domain.entities.users import Profile, Credentials
-from src.infra.repositories.base import BaseUoW
 from src.infra.repositories.users import UserUoW
 from src.logic.commands.base import BaseCommand, CommandHandler
 from src.logic.exceptions.users import UserAlreadyExistsException
