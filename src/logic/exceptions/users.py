@@ -10,4 +10,4 @@ class UserAlreadyExistsException(LogicException):
 
     @property
     def message(self) -> str:
-        return f"User with given email({self.email}) and username({self.username}) already exists"
+        return f"User with given email({self.email}) or username({self.username}) already exists"
