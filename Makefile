@@ -3,6 +3,7 @@ EXEC = docker exec -it
 LOGS = docker logs
 APP_CONTAINER = communet-api
 POSTGRES_CONTAINER = communet-postgres
+REDIS_CONTAINER = communet-redis
 
 .PHONY: app
 app:
@@ -31,6 +32,14 @@ logs:
 .PHONY: pg-logs
 pg-logs:
 	${LOGS} ${POSTGRES_CONTAINER} -f
+
+.PHONY: redis-exec
+redis-exec:
+	${EXEC} ${REDIS_CONTAINER} redis-cli
+
+.PHONY: redis-logs
+redis-logs:
+	${LOGS} ${REDIS_CONTAINER} -f
 
 .PHONY: makemigrations
 makemigrations:
