@@ -11,9 +11,15 @@ class Settings(BaseSettings):
 	POSTGRES_HOST: str = Field(default="postgres", alias="POSTGRES_HOST")
 	POSTGRES_PORT: int = Field(default=5432, alias="POSTGRES_PORT")
 	POSTGRES_DB: str = Field(default="communet_db", alias="POSTGRES_DB")
+	REDIS_HOST: str = Field(default="redis", alias="REDIS_HOST")
+	REDIS_PORT: int = Field(default=6379, alias="REDIS_PORT")
+	REDIS_DB: int = Field(default=0, alias="REDIS_DB")
 
 	def get_db_url(self) -> str:
-		return f'postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}'
+		return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
+	def get_redis_url(self) -> str:
+		return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
 
 @lru_cache
