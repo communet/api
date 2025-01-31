@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from uuid import UUID
 
 from src.domain.entities.base import BaseEntity
 from src.domain.values.users import Email, Password, Username
@@ -44,3 +46,11 @@ class Profile(BaseEntity):
         # TODO: register `NewUserRegisterEvent` here
 
         return profile
+
+
+@dataclass(eq=False)
+class AuthData(BaseEntity):
+    access_token: str
+    refresh_token: str
+    access_expires: datetime
+    refresh_expires: timedelta
