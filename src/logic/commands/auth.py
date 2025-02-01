@@ -8,7 +8,8 @@ from src.infra.repositories.users import UserUoW
 from src.infra.services.jwt import BaseJWTService
 from src.infra.services.redis import BaseRedisService
 from src.logic.commands.base import BaseCommand, CommandHandler
-from src.logic.exceptions.auth import InvalidCredentialsException, UnauthorizedException, UserAlreadyExistsException
+from src.logic.exceptions.auth import InvalidCredentialsException, InvalidRefreshTokenException, UnauthorizedException, UserAlreadyExistsException
+from src.tests.infra.services.test_jwt import jwt_service
 
 
 @dataclass(frozen=True)
@@ -67,7 +68,7 @@ class LoginCommandHandler(CommandHandler[LoginCommand, AuthData]):
         profile_id = str(credentials.profile.oid)
         auth_data = self.jwt_service.generate_auth_tokens(profile_id=profile_id)
 
-        self.redis_service.set(
+        await self.redis_service.set(
             key=auth_data.refresh_token,
             value=profile_id,
             ttl=auth_data.refresh_expires,
@@ -98,3 +99,29 @@ class ExtractProfileFromJWTTokenHandler(CommandHandler[ExtractProfileFromJWTToke
 
         profile_entity = convert_profile_model_to_entity(profile_model)
         return profile_entity
+
+
+@dataclass(frozen=True)
+class RefreshTokensCommand:
+    refresh_token: str
+
+
+@dataclass(frozen=True)
+class RefreshTokensCommandHandler(CommandHandler[RefreshTokensCommand, AuthData]):
+    jwt_service: BaseJWTService
+    redis_service: BaseRedisService
+
+    async def handle(self, command: RefreshTokensCommand) -> AuthData:
+        profile_id = await self.redis_service.pop(key=command.refresh_token)
+        if not profile_id:
+            raise InvalidRefreshTokenException()
+
+        auth_data = self.jwt_service.generate_auth_tokens(profile_id=profile_id)
+
+        await self.redis_service.set(
+            key=auth_data.refresh_token,
+            value=profile_id,
+            ttl=auth_data.refresh_expires,
+        )
+
+        return auth_data

@@ -5,7 +5,16 @@ from punq import Container, Scope
 from src.infra.repositories.users import UserUoW
 from src.infra.services.jwt import BaseJWTService, JWTService
 from src.infra.services.redis import BaseRedisService, RedisService
-from src.logic.commands.auth import ExtractProfileFromJWTTokenCommand, ExtractProfileFromJWTTokenHandler, LoginCommand, LoginCommandHandler, RegisterCommandHandler, RegisterCommand
+from src.logic.commands.auth import (
+	ExtractProfileFromJWTTokenCommand,
+	ExtractProfileFromJWTTokenHandler,
+	LoginCommand,
+	LoginCommandHandler,
+	RefreshTokensCommand,
+	RefreshTokensCommandHandler,
+	RegisterCommandHandler,
+	RegisterCommand,
+)
 from src.logic.init.mediator import Mediator
 from src.settings.config import settings
 
@@ -43,6 +52,10 @@ def _init_container() -> Container:
             jwt_service=container.resolve(BaseJWTService),
             user_uow=container.resolve(UserUoW),
         )
+        refresh_tokens_handler = RefreshTokensCommandHandler(
+            jwt_service=container.resolve(BaseJWTService),
+            redis_service=container.resolve(BaseRedisService),
+        )
 
         mediator.register_command(
             command=RegisterCommand,
@@ -55,6 +68,10 @@ def _init_container() -> Container:
         mediator.register_command(
             command=ExtractProfileFromJWTTokenCommand,
             command_handlers=[extract_profile_handler],
+        )
+        mediator.register_command(
+            command=RefreshTokensCommand,
+            command_handlers=[refresh_tokens_handler],
         )
 
         return mediator
