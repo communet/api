@@ -11,3 +11,10 @@ class UserAlreadyExistsException(LogicException):
     @property
     def message(self) -> str:
         return f"User with given email({self.email}) or username({self.username}) already exists"
+
+
+@dataclass(eq=False)
+class InvalidCredentialsException(LogicException):
+    @property
+    def message(self) -> str:
+        return "Invalid credentials exception"
