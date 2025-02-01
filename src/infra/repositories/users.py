@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Optional
+from uuid import UUID
 
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +15,14 @@ from src.infra.repositories.base import BaseRepository, BaseUoW
 @dataclass(eq=False, frozen=True)
 class BaseCredentialsRepository(BaseRepository):
     @abstractmethod
+    async def find_by_email(self, email: str) -> Optional[CredentialsModel]:
+        ...
+
+    @abstractmethod
+    async def find_by_username(self, username: str) -> Optional[CredentialsModel]:
+        ...
+
+    @abstractmethod
     async def create(self, credentials: Credentials) -> Optional[CredentialsModel]:
         ...
 
@@ -24,6 +33,16 @@ class BaseCredentialsRepository(BaseRepository):
 
 @dataclass(eq=False, frozen=True)
 class CredentialsRepository(BaseCredentialsRepository):
+    async def find_by_email(self, email: str) -> Optional[CredentialsModel]:
+        stmt = select(CredentialsModel).where(CredentialsModel.email == email)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def find_by_username(self, username: str) -> Optional[CredentialsModel]:
+        stmt = select(CredentialsModel).where(CredentialsModel.username == username)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def create(self, credentials: Credentials) -> Optional[CredentialsModel]:
         """
         Create a new user credentials. Add user credentials model to session by UserUoW.
@@ -55,12 +74,21 @@ class CredentialsRepository(BaseCredentialsRepository):
 @dataclass(eq=False, frozen=True)
 class BaseProfileRepository(BaseRepository):
     @abstractmethod
+    async def find_by_credentials_id(self, credentials_id: UUID) -> Optional[ProfileModel]:
+        ...
+
+    @abstractmethod
     async def create(self, profile: Profile) -> Optional[ProfileModel]:
         ...
 
 
 @dataclass(eq=False, frozen=True)
 class ProfileRepository(BaseProfileRepository):
+    async def find_by_credentials_id(self, credentials_id: UUID) -> Optional[ProfileModel]:
+        stmt = select(ProfileModel).where(ProfileModel.credentials_id == credentials_id)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def create(self, profile: Profile) -> Optional[ProfileModel]:
         """
         Create a new user profile. Add user profile model to session by UserUoW.
