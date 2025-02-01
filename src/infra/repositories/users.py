@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from src.domain.entities.users import Credentials, Profile
 from src.infra.database import DatabaseManager
@@ -74,6 +75,10 @@ class CredentialsRepository(BaseCredentialsRepository):
 @dataclass(eq=False, frozen=True)
 class BaseProfileRepository(BaseRepository):
     @abstractmethod
+    async def find_by_id(self, profile_id: UUID) -> Optional[ProfileModel]:
+        ...
+
+    @abstractmethod
     async def find_by_credentials_id(self, credentials_id: UUID) -> Optional[ProfileModel]:
         ...
 
@@ -84,6 +89,11 @@ class BaseProfileRepository(BaseRepository):
 
 @dataclass(eq=False, frozen=True)
 class ProfileRepository(BaseProfileRepository):
+    async def find_by_id(self, profile_id) -> Optional[ProfileModel]:
+        stmt = select(ProfileModel).where(ProfileModel.oid == profile_id).options(joinedload(ProfileModel.credentials))
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def find_by_credentials_id(self, credentials_id: UUID) -> Optional[ProfileModel]:
         stmt = select(ProfileModel).where(ProfileModel.credentials_id == credentials_id)
         result = await self._session.execute(stmt)
