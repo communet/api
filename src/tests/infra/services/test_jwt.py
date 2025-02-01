@@ -31,3 +31,13 @@ def test_generate_tokens(jwt_service, config: Settings = settings()) -> None:
 	assert isinstance(auth_data.refresh_token, str)
 	assert isinstance(auth_data.refresh_expires, timedelta)
 	assert auth_data.refresh_expires.days == config.REFRESH_EXPIRES_IN_DAYS
+
+
+def test_decode_jwt_token(jwt_service) -> None:
+	profile_id = str(uuid4())
+	jwt_token = jwt_service.generate_auth_tokens(profile_id).access_token
+	profile_id_from_token = jwt_service.decode_jwt_token(jwt_token)
+
+	assert profile_id_from_token is not None
+	assert isinstance(profile_id_from_token, str)
+	assert profile_id_from_token == profile_id
