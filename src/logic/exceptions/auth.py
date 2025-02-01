@@ -25,3 +25,10 @@ class UnauthorizedException(LogicException):
     @property
     def message(self) -> str:
         return "User is not authorized"
+
+
+@dataclass(eq=False)
+class InvalidRefreshTokenException(LogicException):
+    @property
+    def message(self) -> str:
+        return "Given refresh token does not exists"
