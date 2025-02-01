@@ -35,12 +35,20 @@ class BaseCredentialsRepository(BaseRepository):
 @dataclass(eq=False, frozen=True)
 class CredentialsRepository(BaseCredentialsRepository):
     async def find_by_email(self, email: str) -> Optional[CredentialsModel]:
-        stmt = select(CredentialsModel).where(CredentialsModel.email == email)
+        stmt = (
+            select(CredentialsModel)
+            .where(CredentialsModel.email == email)
+            .options(joinedload(CredentialsModel.profile))
+        )
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def find_by_username(self, username: str) -> Optional[CredentialsModel]:
-        stmt = select(CredentialsModel).where(CredentialsModel.username == username)
+        stmt = (
+            select(CredentialsModel)
+            .where(CredentialsModel.username == username)
+            .options(joinedload(CredentialsModel.profile))
+        )
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -79,10 +87,6 @@ class BaseProfileRepository(BaseRepository):
         ...
 
     @abstractmethod
-    async def find_by_credentials_id(self, credentials_id: UUID) -> Optional[ProfileModel]:
-        ...
-
-    @abstractmethod
     async def create(self, profile: Profile) -> Optional[ProfileModel]:
         ...
 
@@ -91,11 +95,6 @@ class BaseProfileRepository(BaseRepository):
 class ProfileRepository(BaseProfileRepository):
     async def find_by_id(self, profile_id) -> Optional[ProfileModel]:
         stmt = select(ProfileModel).where(ProfileModel.oid == profile_id).options(joinedload(ProfileModel.credentials))
-        result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()
-
-    async def find_by_credentials_id(self, credentials_id: UUID) -> Optional[ProfileModel]:
-        stmt = select(ProfileModel).where(ProfileModel.credentials_id == credentials_id)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
