@@ -66,7 +66,7 @@ def test_valid_password() -> None:
 
     assert password.value != valid_password
     assert isinstance(password.value, str)
-    assert password.check_password(valid_password) is True
+    assert Password.check_passwords(password1=valid_password, password2=password.as_generic_type()) is True
 
 
 def test_invalid_password() -> None:
@@ -83,4 +83,4 @@ def test_invalid_password() -> None:
             Password(password)
 
     password = Password(valid_password)
-    assert password.check_password(invalid_password) is False
+    assert Password.check_passwords(password1=invalid_password, password2=password.as_generic_type()) is False

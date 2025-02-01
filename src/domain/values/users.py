@@ -71,12 +71,13 @@ class Password(BaseValue[str]):
         hashed_password = bcrypt.hashpw(password.encode("utf-8"), salt)
         return hashed_password.decode("utf-8")
 
-    def check_password(self, password: str) -> bool:
+    @staticmethod
+    def check_passwords(password1: str, password2: str) -> bool:
         """
         Compare password and value of Password instance.
         :return: True if password and value are equal else False
         """
-        return bcrypt.checkpw(password.encode("utf-8"), self.value.encode("utf-8"))
+        return bcrypt.checkpw(password1.encode("utf-8"), password2.encode("utf-8"))
 
     def _validate(self, value: str) -> None:
         """This method will be calls in `__post_init__` method"""
