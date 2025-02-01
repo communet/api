@@ -53,27 +53,23 @@ class LoginCommandHandler(CommandHandler[LoginCommand, AuthData]):
 
     async def handle(self, command: LoginCommand) -> AuthData:
         async with self.user_uow as uow:
-            creds = (
+            credentials = (
                 await uow.credentials_repository.find_by_username(command.username)
                 if command.username else
                 await uow.credentials_repository.find_by_email(command.email)
             )
-            if not creds:
+            if not credentials:
                 raise InvalidCredentialsException()
 
-            profile = await uow.profile_repository.find_by_credentials_id(creds.oid)
-            if not profile:
-                raise InvalidCredentialsException()
-
-        if not Password.check_passwords(password1=command.password, password2=creds.password):
+        if not Password.check_passwords(password1=command.password, password2=credentials.password):
             raise InvalidCredentialsException()
 
-        profile_id_str = str(profile.oid)
-        auth_data = self.jwt_service.generate_auth_tokens(profile_id=profile_id_str)
+        profile_id = str(credentials.profile.oid)
+        auth_data = self.jwt_service.generate_auth_tokens(profile_id=profile_id)
 
         self.redis_service.set(
             key=auth_data.refresh_token,
-            value=profile_id_str,
+            value=profile_id,
             ttl=auth_data.refresh_expires,
         )
 
