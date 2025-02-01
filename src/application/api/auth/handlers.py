@@ -1,15 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from punq import Container
 
 from src.application.api.auth.schemas import (
 	LoginRequestSchema,
 	LoginResponseSchema,
+	RefreshResponseSchema,
 	RegisterResponseSchema,
 	RegisterRequestSchema,
 )
 from src.application.api.schemas import ErrorSchema
 from src.domain.exceptions.base import ApplicationException
-from src.logic.commands.auth import LoginCommand, RegisterCommand
+from src.logic.commands.auth import LoginCommand, RefreshTokensCommand, RegisterCommand
 from src.logic.init.container import init_container
 from src.logic.init.mediator import Mediator
 
@@ -79,3 +80,37 @@ async def login(
     except ApplicationException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": "invalid credentials"})
     return LoginResponseSchema.from_entity(auth_data)
+
+
+@router.post(
+    path='/auth/refresh',
+    status_code=status.HTTP_200_OK,
+    description="Refresh tokens for user",
+    responses={
+        status.HTTP_200_OK: {"model": RefreshResponseSchema},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema}
+    },
+)
+async def refresh(
+    request: Request,
+    response: Response,
+    container: Container = Depends(init_container),
+) -> RefreshResponseSchema:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        refresh = request.cookies.pop("refresh_token")
+        if not refresh:
+            raise ApplicationException()
+
+        auth_data, *_ = await mediator.handle_command(RefreshTokensCommand(refresh_token=refresh))
+
+        response.set_cookie(
+            key="refresh_token",
+            value=auth_data.refresh_token,
+            max_age=auth_data.refresh_expires.seconds,
+            httponly=True,
+        )
+    except ApplicationException:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": "refresh token was expired"})
+    return RefreshResponseSchema.from_entity(auth_data)

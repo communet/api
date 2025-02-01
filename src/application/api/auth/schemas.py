@@ -51,3 +51,15 @@ class LoginResponseSchema(BaseResponseSchema):
             access_token=entity.access_token,
             access_expires=entity.access_expires,
         )
+
+
+class RefreshResponseSchema(BaseResponseSchema):
+    access_token: str
+    access_expires: datetime
+
+    @classmethod
+    def from_entity(cls, entity: AuthData) -> "RefreshResponseSchema":
+        return cls(
+            access_token=entity.access_token,
+            access_expires=entity.access_expires,
+        )
