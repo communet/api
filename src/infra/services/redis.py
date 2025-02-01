@@ -20,6 +20,10 @@ class BaseRedisService(ABC):
 	async def delete(self, key: str) -> bool:
 		...
 
+	@abstractmethod
+	async def pop(self, key: str) -> Optional[str]:
+		...
+
 
 class RedisService(BaseRedisService):
 	def __init__(self, config: Settings) -> None:
@@ -36,8 +40,14 @@ class RedisService(BaseRedisService):
 		return await self.__client.set(
 			name=key,
 			value=value,
-			ex=ttl.seconds,
+			ex=ttl,
 		)
+
+	async def pop(self, key: str) -> Optional[str]:
+		result = await self.get(key=key)
+		if result:
+			await self.delete(key=key)
+		return result
 
 	async def delete(self, key: str) -> bool:
 		result = await self.__client.delete(key)

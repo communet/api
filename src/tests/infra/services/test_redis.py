@@ -29,7 +29,7 @@ async def test_set_value(redis_service) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_value(redis_service):
+async def test_get_value(redis_service) -> None:
 	invalid_key = "asdfasdfsafd"
 	valid_data = {
 		"key": "test_key",
@@ -44,7 +44,7 @@ async def test_get_value(redis_service):
 
 
 @pytest.mark.asyncio
-async def test_delete_value(redis_service):
+async def test_delete_value(redis_service) -> None:
 	valid_key = "test_key"
 	invalid_key = "asdkfjaskdfjaslfdk"
 
@@ -53,3 +53,22 @@ async def test_delete_value(redis_service):
 
 	result = await redis_service.delete(invalid_key)
 	assert result is False
+
+
+@pytest.mark.asyncio
+async def test_pop_value(redis_service) -> None:
+	test_data = {"key": "test_key", "value": "test_value", "ttl": timedelta(minutes=2)}
+
+	await redis_service.set(
+		key=test_data.get("key"),
+		value=test_data.get("value"),
+		ttl=test_data.get("ttl"),
+	)
+
+	result = await redis_service.pop(key=test_data.get("key"))
+
+	assert result is not None
+	assert result == test_data.get("value")
+
+	result = await redis_service.pop(key=test_data.get("key"))
+	assert result is None
