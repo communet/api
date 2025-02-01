@@ -18,3 +18,10 @@ class InvalidCredentialsException(LogicException):
     @property
     def message(self) -> str:
         return "Invalid credentials exception"
+
+
+@dataclass(eq=False)
+class UnauthorizedException(LogicException):
+    @property
+    def message(self) -> str:
+        return "User is not authorized"
