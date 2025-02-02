@@ -2,6 +2,7 @@ from functools import lru_cache
 
 from punq import Container, Scope
 
+from src.infra.repositories.chanels import BaseChanelRepository, ChanelRepository
 from src.infra.repositories.users import UserUoW
 from src.infra.services.jwt import BaseJWTService, JWTService
 from src.infra.services.redis import BaseRedisService, RedisService
@@ -15,6 +16,7 @@ from src.logic.commands.auth import (
 	RegisterCommandHandler,
 	RegisterCommand,
 )
+from src.logic.commands.chanels import CreateChanelCommand, CreateChanelCommandHandler
 from src.logic.init.mediator import Mediator
 from src.settings.config import settings
 
@@ -33,6 +35,7 @@ def _init_container() -> Container:
     def redis_factory() -> BaseRedisService:
         return RedisService(settings())
 
+    container.register(BaseChanelRepository, factory=ChanelRepository, scope=Scope.singleton)
     container.register(UserUoW, factory=UserUoW, scope=Scope.singleton)
     container.register(BaseRedisService, factory=redis_factory, scope=Scope.singleton)
     container.register(BaseJWTService, factory=jwt_factory, scope=Scope.singleton)
@@ -40,6 +43,7 @@ def _init_container() -> Container:
     def init_mediator() -> Mediator:
         mediator = Mediator()
 
+		# Authenticate handlers
         register_new_user_handler = RegisterCommandHandler(
             user_uow=container.resolve(UserUoW),
         )
@@ -57,6 +61,11 @@ def _init_container() -> Container:
             redis_service=container.resolve(BaseRedisService),
         )
 
+        # Chanel handlers
+        create_chanel_handler = CreateChanelCommandHandler(
+            chanel_repository=container.resolve(BaseChanelRepository),
+        )
+
         mediator.register_command(
             command=RegisterCommand,
             command_handlers=[register_new_user_handler],
@@ -72,6 +81,10 @@ def _init_container() -> Container:
         mediator.register_command(
             command=RefreshTokensCommand,
             command_handlers=[refresh_tokens_handler],
+        )
+        mediator.register_command(
+            command=CreateChanelCommand,
+            command_handlers=[create_chanel_handler],
         )
 
         return mediator
