@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.infra.database import DatabaseManager
+
 
 @dataclass(eq=False, frozen=True)
 class BaseRepository(ABC):
@@ -10,7 +12,7 @@ class BaseRepository(ABC):
     Base repository with common attributes and methods.
     :param _session: SQLAlchemy session for database operations.
     """
-    _session: AsyncSession
+    _session: AsyncSession = DatabaseManager().get_test_session()
 
 
 class BaseUoW(ABC):
