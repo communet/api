@@ -26,3 +26,7 @@ class Chanel(BaseEntity):
         # NOTE: register events here
 
         return chanel
+
+    def delete(self) -> None:
+        # NOTE: method for register events on delete
+        self.is_deleted = True
