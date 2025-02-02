@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException, status
 from punq import Container
 
 from src.application.api.auth.depends import get_current_user
@@ -7,7 +8,7 @@ from src.application.api.chanels.schemas import CreateChanelRequestSchema, Creat
 from src.application.api.schemas import ErrorSchema
 from src.domain.entities.users import Profile
 from src.domain.exceptions.base import ApplicationException
-from src.logic.commands.chanels import CreateChanelCommand
+from src.logic.commands.chanels import CreateChanelCommand, DeleteChanelCommand
 from src.logic.init.container import init_container
 from src.logic.init.mediator import Mediator
 
@@ -25,9 +26,9 @@ router = APIRouter(tags=["Chanels"])
     },
 )
 async def create_chanel(
-        schema: CreateChanelRequestSchema,
-		_ = Depends(get_current_user),  # FIXME: Its need for protect route. Change to more useful depends without user
-        container: Container = Depends(init_container),
+    schema: CreateChanelRequestSchema,
+    _ = Depends(get_current_user),  # FIXME: Its need for protect route. Change to more useful depends without user
+    container: Container = Depends(init_container),
 ) -> CreateChanelResponseSchema:
     mediator: Mediator = container.resolve(Mediator)
 
@@ -40,3 +41,22 @@ async def create_chanel(
     except ApplicationException as exception:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
     return CreateChanelResponseSchema.from_entity(chanel)
+
+
+@router.delete(
+    path='/chanels/{chanel_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Delete exists chanel",
+    responses={status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema}},
+)
+async def delete_chanel(
+    chanel_id: UUID,
+    _ = Depends(get_current_user),  # FIXME: Its need for protect route. Change to more useful depends without user
+    container: Container = Depends(init_container),
+) -> None:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        await mediator.handle_command(DeleteChanelCommand(chanel_id=chanel_id))
+    except ApplicationException as exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
