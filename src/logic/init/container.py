@@ -16,7 +16,7 @@ from src.logic.commands.auth import (
 	RegisterCommandHandler,
 	RegisterCommand,
 )
-from src.logic.commands.chanels import CreateChanelCommand, CreateChanelCommandHandler
+from src.logic.commands.chanels import CreateChanelCommand, CreateChanelCommandHandler, DeleteChanelCommand, DeleteChanelCommandHandler
 from src.logic.init.mediator import Mediator
 from src.settings.config import settings
 
@@ -65,6 +65,9 @@ def _init_container() -> Container:
         create_chanel_handler = CreateChanelCommandHandler(
             chanel_repository=container.resolve(BaseChanelRepository),
         )
+        delete_chanel_handler = DeleteChanelCommandHandler(
+            chanel_repository=container.resolve(BaseChanelRepository),
+        )
 
         mediator.register_command(
             command=RegisterCommand,
@@ -85,6 +88,10 @@ def _init_container() -> Container:
         mediator.register_command(
             command=CreateChanelCommand,
             command_handlers=[create_chanel_handler],
+        )
+        mediator.register_command(
+            command=DeleteChanelCommand,
+            command_handlers=[delete_chanel_handler],
         )
 
         return mediator
