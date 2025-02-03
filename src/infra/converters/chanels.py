@@ -1,13 +1,13 @@
-from src.domain.entities.chanels import Chanel
-from src.domain.values.chanels import ChanelName
-from src.infra.models.chanels import ChanelModel
+from src.domain.entities.channels import Channel
+from src.domain.values.channels import ChannelName
+from src.infra.models.channels import ChannelModel
 
 
-def convert_chanel_model_to_entity(chanel_model: ChanelModel) -> Chanel:
-    return Chanel(
-        oid=chanel_model.oid,
-        name=ChanelName(chanel_model.name),
-        description=chanel_model.description,
-        is_deleted=chanel_model.is_deleted,
-        avatar=chanel_model.avatar,
+def convert_channel_model_to_entity(channel_model: ChannelModel) -> Channel:
+    return Channel(
+        oid=channel_model.oid,
+        name=ChannelName(channel_model.name),
+        description=channel_model.description,
+        is_deleted=channel_model.is_deleted,
+        avatar=channel_model.avatar,
     )

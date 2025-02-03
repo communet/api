@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 
 from src.domain.entities.base import BaseEntity
-from src.domain.values.chanels import ChanelName
+from src.domain.values.channels import ChannelName
 
 
 @dataclass(eq=False)
-class Chanel(BaseEntity):
-    name: ChanelName
+class Channel(BaseEntity):
+    name: ChannelName
     description: str | None
     avatar: str | None
     is_deleted: bool = field(
@@ -15,9 +15,9 @@ class Chanel(BaseEntity):
     ) 
 
     @classmethod
-    def create(cls, name: str, description: str | None, avatar: str | None, is_deleted: bool = False) -> "Chanel":
+    def create(cls, name: str, description: str | None, avatar: str | None, is_deleted: bool = False) -> "Channel":
         chanel = cls(
-            name=ChanelName(name),
+            name=ChannelName(name),
             description=description,
             is_deleted=is_deleted,
             avatar=avatar,

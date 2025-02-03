@@ -1,20 +1,20 @@
 from src.application.api.schemas import BaseRequestSchema, BaseResponseSchema
-from src.domain.entities.chanels import Chanel
+from src.domain.entities.channels import Channel
 
 
-class CreateChanelRequestSchema(BaseRequestSchema):
+class CreateChannelRequestSchema(BaseRequestSchema):
 	name: str
 	description: str | None = None
 	avatar: str | None = None
 
 
-class CreateChanelResponseSchema(BaseResponseSchema):
+class CreateChannelResponseSchema(BaseResponseSchema):
 	name: str
 	description: str | None
 	avatar: str | None
 
 	@classmethod
-	def from_entity(cls, entity: Chanel) -> "CreateChanelResponseSchema":
+	def from_entity(cls, entity: Channel) -> "CreateChannelResponseSchema":
 		return cls(
 			name=entity.name.as_generic_type(),
 			description=entity.description,

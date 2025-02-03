@@ -4,8 +4,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from src.infra.models.base import Base
 
 
-class ChanelModel(Base):
-    __tablename__ = "chanels"
+class ChannelModel(Base):
+    __tablename__ = "channels"
 
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text(), nullable=True, default=None)

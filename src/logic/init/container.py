@@ -2,7 +2,7 @@ from functools import lru_cache
 
 from punq import Container, Scope
 
-from src.infra.repositories.chanels import BaseChanelRepository, ChanelRepository
+from src.infra.repositories.channels import BaseChannelRepository, ChannelRepository
 from src.infra.repositories.users import UserUoW
 from src.infra.services.jwt import BaseJWTService, JWTService
 from src.infra.services.redis import BaseRedisService, RedisService
@@ -16,7 +16,12 @@ from src.logic.commands.auth import (
 	RegisterCommandHandler,
 	RegisterCommand,
 )
-from src.logic.commands.chanels import CreateChanelCommand, CreateChanelCommandHandler, DeleteChanelCommand, DeleteChanelCommandHandler
+from src.logic.commands.channels import (
+    CreateChannelCommand,
+    CreateChannelCommandHandler,
+    DeleteChannelCommand,
+    DeleteChannelCommandHandler,
+)
 from src.logic.init.mediator import Mediator
 from src.settings.config import settings
 
@@ -35,7 +40,7 @@ def _init_container() -> Container:
     def redis_factory() -> BaseRedisService:
         return RedisService(settings())
 
-    container.register(BaseChanelRepository, factory=ChanelRepository, scope=Scope.singleton)
+    container.register(BaseChannelRepository, factory=ChannelRepository, scope=Scope.singleton)
     container.register(UserUoW, factory=UserUoW, scope=Scope.singleton)
     container.register(BaseRedisService, factory=redis_factory, scope=Scope.singleton)
     container.register(BaseJWTService, factory=jwt_factory, scope=Scope.singleton)
@@ -61,12 +66,12 @@ def _init_container() -> Container:
             redis_service=container.resolve(BaseRedisService),
         )
 
-        # Chanel handlers
-        create_chanel_handler = CreateChanelCommandHandler(
-            chanel_repository=container.resolve(BaseChanelRepository),
+        # Channel handlers
+        create_channel_handler = CreateChannelCommandHandler(
+            channel_repository=container.resolve(BaseChannelRepository),
         )
-        delete_chanel_handler = DeleteChanelCommandHandler(
-            chanel_repository=container.resolve(BaseChanelRepository),
+        delete_channel_handler = DeleteChannelCommandHandler(
+            channel_repository=container.resolve(BaseChannelRepository),
         )
 
         mediator.register_command(
@@ -86,12 +91,12 @@ def _init_container() -> Container:
             command_handlers=[refresh_tokens_handler],
         )
         mediator.register_command(
-            command=CreateChanelCommand,
-            command_handlers=[create_chanel_handler],
+            command=CreateChannelCommand,
+            command_handlers=[create_channel_handler],
         )
         mediator.register_command(
-            command=DeleteChanelCommand,
-            command_handlers=[delete_chanel_handler],
+            command=DeleteChannelCommand,
+            command_handlers=[delete_channel_handler],
         )
 
         return mediator

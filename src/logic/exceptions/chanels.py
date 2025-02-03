@@ -5,9 +5,9 @@ from src.logic.exceptions.base import LogicException
 
 
 @dataclass(eq=False)
-class ChanelDoesNotExistsException(LogicException):
-    chanel_id: UUID
+class ChannelDoesNotExistsException(LogicException):
+    channel_id: UUID
 
     @property
     def message(self) -> str:
-        return f"Chanel with given id({str(self.chanel_id)}) does not exists"
+        return f"Channel with given id({str(self.channel_id)}) does not exists"

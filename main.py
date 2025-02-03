@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from src.application.api.auth.handlers import router as auth_router
-from src.application.api.chanels.handlers import router as chanel_router
+from src.application.api.channels.handlers import router as channel_router
 from src.settings.config import settings
 
 
@@ -16,6 +16,6 @@ def create_app() -> FastAPI:
 	)
 
 	app.include_router(router=auth_router, prefix="/api/v1")
-	app.include_router(router=chanel_router, prefix="/api/v1")
+	app.include_router(router=channel_router, prefix="/api/v1")
 
 	return app
