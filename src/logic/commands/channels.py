@@ -20,20 +20,49 @@ class CreateChannelCommandHandler(CommandHandler[CreateChannelCommand, Channel])
     channel_repository: BaseChannelRepository
 
     async def handle(self, command: CreateChannelCommand) -> Channel:
-        chanel = Channel.create(
+        channel = Channel.create(
             name=command.name,
             description=command.description,
             avatar=command.avatar,
         )
 
-        await self.channel_repository.create(channel=chanel)
+        await self.channel_repository.create(channel=channel)
 
-        return chanel
+        return channel
+
+
+@dataclass(frozen=True)
+class UpdateChannelCommand:
+    channel_id: UUID
+    name: str | None
+    description: str | None
+    avatar: str | None
+
+
+@dataclass(frozen=True)
+class UpdateChannelCommandHandler(CommandHandler[UpdateChannelCommand, Channel]):
+    channel_repository: BaseChannelRepository
+
+    async def handle(self, command: UpdateChannelCommand) -> Channel:
+        channel_model = await self.channel_repository.get_channel_by_id(channel_id=command.channel_id)
+
+        if not channel_model:
+            raise ChannelDoesNotExistsException(channel_id=command.channel_id)
+
+        channel = convert_channel_model_to_entity(channel_model)
+        channel.update(
+            name=command.name,
+            description=command.description,
+            avatar=command.avatar,
+        )
+
+        await self.channel_repository.update_channel(channel=channel)
+        return channel
 
 
 @dataclass(frozen=True)
 class DeleteChannelCommand:
-    chanel_id: UUID
+    channel_id: UUID
 
 
 @dataclass(frozen=True)
@@ -41,12 +70,12 @@ class DeleteChannelCommandHandler(CommandHandler[DeleteChannelCommand, None]):
     channel_repository: BaseChannelRepository
 
     async def handle(self, command: DeleteChannelCommand) -> None:
-        chanel_model = await self.channel_repository.get_channel_by_id(channel_id=command.chanel_id)
+        channel_model = await self.channel_repository.get_channel_by_id(channel_id=command.channel_id)
 
-        if not chanel_model:
-            raise ChannelDoesNotExistsException(channel_id=command.chanel_id)
+        if not channel_model:
+            raise ChannelDoesNotExistsException(channel_id=command.channel_id)
 
-        chanel = convert_channel_model_to_entity(chanel_model)
-        chanel.delete()
+        channel = convert_channel_model_to_entity(channel_model)
+        channel.delete()
 
-        await self.channel_repository.delete_channel_by_id(channel_id=command.chanel_id)
+        await self.channel_repository.delete_channel_by_id(channel_id=command.channel_id)
