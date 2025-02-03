@@ -27,6 +27,11 @@ class Channel(BaseEntity):
 
         return chanel
 
+    def update(self, name: str | None, description: str | None, avatar: str | None) -> None:
+        self.name = ChannelName(name) if name else None
+        self.description = description if description else None
+        self.avatar = description if description else None
+
     def delete(self) -> None:
         # NOTE: method for register events on delete
         self.is_deleted = True
