@@ -16,6 +16,10 @@ class BaseChannelRepository(BaseRepository):
 		...
 
 	@abstractmethod
+	async def update_channel(self, channel: Channel) -> None:
+		...
+
+	@abstractmethod
 	async def delete_channel_by_id(self, channel_id: UUID) -> bool:
 		...
 
@@ -36,6 +40,20 @@ class ChannelRepository(BaseChannelRepository):
 			)
 
 			session.add(channel_model)
+			await session.commit()
+
+	async def update_channel(self, channel: Channel) -> None:
+		async with self._session as session:
+			stmt = (
+				update(ChannelModel)
+				.where(ChannelModel.oid == channel.oid)
+				.values(
+					name=channel.name.as_generic_type(),
+					description=channel.description,
+					avatar=channel.avatar,
+				)
+			)
+			await session.execute(stmt)
 			await session.commit()
 
 	async def get_channel_by_id(self, channel_id: UUID) -> ChannelModel | None:
