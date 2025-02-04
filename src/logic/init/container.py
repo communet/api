@@ -25,7 +25,7 @@ from src.logic.commands.channels import (
     UpdateChannelCommandHandler,
 )
 from src.logic.init.mediator import Mediator
-from src.logic.queries.channels import GetChannelByOidQuery, GetChannelByOidQueryHandler
+from src.logic.queries.channels import GetAllChannelsQuery, GetAllChannelsQueryHandler, GetChannelByOidQuery, GetChannelByOidQueryHandler
 from src.settings.config import settings
 
 
@@ -70,6 +70,9 @@ def _init_container() -> Container:
         )
 
         # Channel handlers
+        get_all_channels_handler = GetAllChannelsQueryHandler(
+            channel_repository=container.resolve(BaseChannelRepository),
+        )
         get_channel_by_oid_handler = GetChannelByOidQueryHandler(
             channel_repository=container.resolve(BaseChannelRepository),
         )
@@ -98,6 +101,10 @@ def _init_container() -> Container:
         mediator.register_command(
             command=RefreshTokensCommand,
             command_handlers=[refresh_tokens_handler],
+        )
+        mediator.register_query(
+            query=GetAllChannelsQuery,
+            query_handler=get_all_channels_handler,
         )
         mediator.register_query(
             query=GetChannelByOidQuery,
