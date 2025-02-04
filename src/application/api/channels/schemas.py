@@ -1,6 +1,42 @@
-from uuid import UUID
+from typing import Iterable
 from src.application.api.schemas import BaseRequestSchema, BaseResponseSchema
 from src.domain.entities.channels import Channel
+from src.infra.filters.channels import GetAllChannelsInfraFilters
+
+
+class GetAllChannelsFilters(BaseRequestSchema):
+    limit: int = 10
+    offset: int = 0
+
+    def to_infra(self) -> GetAllChannelsInfraFilters:
+        return GetAllChannelsInfraFilters(limit=self.limit, offset=self.offset)
+
+
+class GetAllChannelsResponseSchema(BaseResponseSchema):
+    count: int
+    offset: int
+    limit: int
+    # FIXME: replace dict to Channel + fix profblem with name field
+    items: list[dict]
+
+    @classmethod
+    def from_entity(
+        cls, count: int, limit: int, offset: int, entities: Iterable[Channel],
+    ) -> "GetAllChannelsResponseSchema":
+        return cls(
+            count=count,
+            offset=offset,
+            limit=limit,
+            items=[
+                {
+                    "oid": entity.oid,
+                    "name": entity.name.as_generic_type(),
+                    "description": entity.description,
+                    "is_deleted": entity.is_deleted,
+                    "avatar": entity.avatar,
+                } for entity in entities
+            ],
+        )
 
 
 class GetChannelByOidResponseSchema(BaseResponseSchema):

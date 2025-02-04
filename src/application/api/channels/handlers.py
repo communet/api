@@ -7,6 +7,8 @@ from src.application.api.auth.depends import get_current_user
 from src.application.api.channels.schemas import (
     CreateChannelRequestSchema,
     CreateChannelResponseSchema,
+    GetAllChannelsFilters,
+    GetAllChannelsResponseSchema,
     GetChannelByOidResponseSchema,
     UpdateChannelRequestSchema,
     UpdateChannelResponseSchema,
@@ -16,10 +18,38 @@ from src.domain.exceptions.base import ApplicationException
 from src.logic.commands.channels import CreateChannelCommand, DeleteChannelCommand, UpdateChannelCommand
 from src.logic.init.container import init_container
 from src.logic.init.mediator import Mediator
-from src.logic.queries.channels import GetChannelByOidQuery
+from src.logic.queries.channels import GetAllChannelsQuery, GetChannelByOidQuery
 
 
 router = APIRouter(tags=["Channels"])
+
+
+@router.get(
+    path='/channels',
+    status_code=status.HTTP_200_OK,
+    description="Get all channels",
+    responses={
+        status.HTTP_200_OK: {"model": GetAllChannelsResponseSchema},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+    },
+)
+async def get_all_channels(
+    filters: GetAllChannelsFilters = Depends(),
+    _ = Depends(get_current_user),  # FIXME: Its need for protect route. Change to more useful depends without user
+    container: Container = Depends(init_container),
+) -> GetAllChannelsResponseSchema:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        channels, total_count = await mediator.handle_query(GetAllChannelsQuery(filters=filters))
+    except ApplicationException as exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
+    return GetAllChannelsResponseSchema.from_entity(
+        count=total_count,
+        entities=channels,
+        limit=filters.limit,
+        offset=filters.offset,
+    )
 
 
 @router.post(
@@ -55,7 +85,7 @@ async def create_channel(
     description="Get channel by oid",
     responses={
         status.HTTP_200_OK: {"model": GetChannelByOidResponseSchema},
-        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorSchema},
     },
 )
 async def get_channel_by_oid(
@@ -68,7 +98,7 @@ async def get_channel_by_oid(
     try:
         channel = await mediator.handle_query(GetChannelByOidQuery(channel_oid=channel_id))
     except ApplicationException as exception:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={"error": exception.message})
     return GetChannelByOidResponseSchema.from_entity(channel)
 
 
