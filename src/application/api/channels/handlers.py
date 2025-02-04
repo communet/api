@@ -7,6 +7,7 @@ from src.application.api.auth.depends import get_current_user
 from src.application.api.channels.schemas import (
     CreateChannelRequestSchema,
     CreateChannelResponseSchema,
+    GetChannelByOidResponseSchema,
     UpdateChannelRequestSchema,
     UpdateChannelResponseSchema,
 )
@@ -15,6 +16,7 @@ from src.domain.exceptions.base import ApplicationException
 from src.logic.commands.channels import CreateChannelCommand, DeleteChannelCommand, UpdateChannelCommand
 from src.logic.init.container import init_container
 from src.logic.init.mediator import Mediator
+from src.logic.queries.channels import GetChannelByOidQuery
 
 
 router = APIRouter(tags=["Channels"])
@@ -45,6 +47,29 @@ async def create_channel(
     except ApplicationException as exception:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
     return CreateChannelResponseSchema.from_entity(channel)
+
+
+@router.get(
+    path='/channels/{channel_id}',
+    status_code=status.HTTP_200_OK,
+    description="Get channel by oid",
+    responses={
+        status.HTTP_200_OK: {"model": GetChannelByOidResponseSchema},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+    },
+)
+async def get_channel_by_oid(
+    channel_id: UUID,
+    _ = Depends(get_current_user),  # FIXME: Its need for protect route. Change to more useful depends without user
+    container: Container = Depends(init_container),
+) -> GetChannelByOidResponseSchema:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        channel = await mediator.handle_query(GetChannelByOidQuery(channel_oid=channel_id))
+    except ApplicationException as exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
+    return GetChannelByOidResponseSchema.from_entity(channel)
 
 
 @router.put(
