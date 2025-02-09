@@ -1,6 +1,7 @@
 from typing import Iterable
 from src.application.api.schemas import BaseRequestSchema, BaseResponseSchema
 from src.domain.entities.channels import Channel
+from src.domain.entities.users import Profile
 from src.infra.filters.channels import GetAllChannelsInfraFilters
 
 
@@ -65,6 +66,7 @@ class CreateChannelResponseSchema(BaseResponseSchema):
     oid: str
     name: str
     description: str | None
+    members: Iterable
     avatar: str | None
 
     @classmethod
@@ -73,6 +75,16 @@ class CreateChannelResponseSchema(BaseResponseSchema):
             oid=str(entity.oid),
             name=entity.name.as_generic_type(),
             description=entity.description,
+            members=[
+                {
+                    "id": member.oid,
+                    "display_name": member.display_name.as_generic_type(),
+                    "username": member.credentials.username.as_generic_type(),
+                    "email": member.credentials.email.as_generic_type(),
+                    "avatar": member.avatar,
+                }
+                for member in entity.members
+            ],
             avatar=entity.avatar,
 		)
 

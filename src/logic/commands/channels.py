@@ -2,16 +2,18 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from src.domain.entities.channels import Channel
-from src.infra.converters.chanels import convert_channel_model_to_entity
+from src.domain.entities.users import Profile
+from src.infra.converters.channels import convert_channel_model_to_entity
 from src.infra.repositories.channels import BaseChannelRepository
 from src.logic.commands.base import CommandHandler
-from src.logic.exceptions.chanels import ChannelDoesNotExistsException
+from src.logic.exceptions.channels import ChannelDoesNotExistsException
 
 
 @dataclass(frozen=True)
 class CreateChannelCommand:
     name: str
     description: str | None
+    author: Profile
     avatar: str | None
 
 
@@ -24,10 +26,10 @@ class CreateChannelCommandHandler(CommandHandler[CreateChannelCommand, Channel])
             name=command.name,
             description=command.description,
             avatar=command.avatar,
+            members=[command.author]
         )
 
-        await self.channel_repository.create(channel=channel)
-
+        await self.channel_repository.create(author=command.author, channel=channel)
         return channel
 
 

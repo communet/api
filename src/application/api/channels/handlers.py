@@ -63,7 +63,7 @@ async def get_all_channels(
 )
 async def create_channel(
     schema: CreateChannelRequestSchema,
-    _ = Depends(get_current_user),  # FIXME: Its need for protect route. Change to more useful depends without user
+    profile = Depends(get_current_user),
     container: Container = Depends(init_container),
 ) -> CreateChannelResponseSchema:
     mediator: Mediator = container.resolve(Mediator)
@@ -72,6 +72,7 @@ async def create_channel(
         channel, *_ = await mediator.handle_command(CreateChannelCommand(
 			name=schema.name,
             description=schema.description,
+            author=profile,
             avatar=schema.avatar,
         ))
     except ApplicationException as exception:

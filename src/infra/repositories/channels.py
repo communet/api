@@ -1,13 +1,15 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Sequence
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import func, select, update
+from sqlalchemy.orm import contains_eager
 
 from src.domain.entities.channels import Channel
+from src.domain.entities.users import Profile
 from src.infra.filters.channels import GetAllChannelsInfraFilters
-from src.infra.models.channels import ChannelModel
+from src.infra.models.channels import ChannelMembersModel, ChannelModel
 from src.infra.repositories.base import BaseRepository
 
 
@@ -18,7 +20,7 @@ class BaseChannelRepository(BaseRepository):
         ...
 
     @abstractmethod
-    async def get_channel_by_id(self, channel_id: UUID) -> Channel:
+    async def get_channel_by_id(self, channel_id: UUID) -> ChannelModel | None:
         ...
 
     @abstractmethod
@@ -26,11 +28,11 @@ class BaseChannelRepository(BaseRepository):
         ...
 
     @abstractmethod
-    async def delete_channel_by_id(self, channel_id: UUID) -> bool:
+    async def delete_channel_by_id(self, channel_id: UUID) -> None:
         ...
 
     @abstractmethod
-    async def create(self, channel: Channel) -> ChannelModel:
+    async def create(self, author: Profile, channel: Channel) -> ChannelModel:
         ...
 
 
@@ -38,14 +40,20 @@ class BaseChannelRepository(BaseRepository):
 class ChannelRepository(BaseChannelRepository):
     async def get_all_channels(self, filters: GetAllChannelsInfraFilters) -> tuple[Sequence[ChannelModel], int]:
         async with self._session as session:
-            stmt = select(ChannelModel).limit(filters.limit).offset(filters.offset)
+            stmt = (
+                select(ChannelModel)
+                .join(ChannelModel.profiles)
+                .options(contains_eager(ChannelModel.profiles))
+                .limit(filters.limit)
+                .offset(filters.offset)
+            )
             result = await session.execute(stmt)
-            items = result.scalars().all()
+            items = result.unique().scalars().all()
             total_count = await session.scalar(select(func.count()).select_from(ChannelModel))
 
             return items, total_count
 
-    async def create(self, channel: Channel) -> ChannelModel:
+    async def create(self, author: Profile, channel: Channel) -> ChannelModel:
         async with self._session as session:
             channel_model = ChannelModel(
                 oid=channel.oid,
@@ -53,8 +61,15 @@ class ChannelRepository(BaseChannelRepository):
                 description=channel.description,
                 avatar=channel.avatar,
             )
+            channel_author = ChannelMembersModel(
+                oid=uuid4(),
+                profile_id=author.oid,
+                channel_id=channel.oid,
+            )
 
             session.add(channel_model)
+            session.add(channel_author)
+
             await session.commit()
 
     async def update_channel(self, channel: Channel) -> None:
@@ -73,9 +88,14 @@ class ChannelRepository(BaseChannelRepository):
 
     async def get_channel_by_id(self, channel_id: UUID) -> ChannelModel | None:
         async with self._session as session:
-            stmt = select(ChannelModel).where(ChannelModel.oid == channel_id)
+            stmt = (
+                select(ChannelModel)
+                .where(ChannelModel.oid == channel_id)
+                .join(ChannelModel.profiles)
+                .options(contains_eager(ChannelModel.profiles))
+            )
             result = await session.execute(stmt)
-            return result.scalar_one_or_none()
+            return result.unique().scalar_one_or_none()
 
     async def delete_channel_by_id(self, channel_id: UUID) -> None:
         async with self._session as session:

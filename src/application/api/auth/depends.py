@@ -1,7 +1,7 @@
-from profile import Profile
 from typing import Container
 from fastapi import Depends, status, HTTPException, Request
 
+from src.domain.entities.users import Profile
 from src.domain.exceptions.base import ApplicationException
 from src.logic.commands.auth import ExtractProfileFromJWTTokenCommand
 from src.logic.init.container import init_container

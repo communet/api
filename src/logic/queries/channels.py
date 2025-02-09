@@ -3,10 +3,10 @@ from typing import Iterable
 from uuid import UUID
 
 from src.domain.entities.channels import Channel
-from src.infra.converters.chanels import convert_channel_model_to_entity
+from src.infra.converters.channels import convert_channel_model_to_entity
 from src.infra.filters.channels import GetAllChannelsInfraFilters
 from src.infra.repositories.channels import BaseChannelRepository
-from src.logic.exceptions.chanels import ChannelDoesNotExistsException
+from src.logic.exceptions.channels import ChannelDoesNotExistsException
 from src.logic.queries.base import BaseQuery, QueryHandler
 
 
