@@ -28,4 +28,6 @@ class ProfileModel(Base):
         unique=True,
         type_=PGUUID(as_uuid=True),
     )
+
     credentials: Mapped["CredentialsModel"] = relationship(back_populates="profile")
+    channels: Mapped[list["ChannelMembersModel"]] = relationship(back_populates="profile")
