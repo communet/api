@@ -86,13 +86,13 @@ async def create_channel(
 )
 async def get_channel_by_oid(
     channel_id: UUID,
-    _ = Depends(get_current_user),  # FIXME: Its need for protect route. Change to more useful depends without user
+    profile = Depends(get_current_user),
     container: Container = Depends(init_container),
 ) -> GetChannelByOidResponseSchema:
     mediator: Mediator = container.resolve(Mediator)
 
     try:
-        channel = await mediator.handle_query(GetChannelByOidQuery(channel_oid=channel_id))
+        channel = await mediator.handle_query(GetChannelByOidQuery(channel_id=channel_id, profile_id=profile.oid))
     except ApplicationException as exception:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={"error": exception.message})
     return GetChannelByOidResponseSchema.from_entity(channel)

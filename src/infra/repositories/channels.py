@@ -20,7 +20,7 @@ class BaseChannelRepository(BaseRepository):
         ...
 
     @abstractmethod
-    async def get_channel_by_id(self, channel_id: UUID) -> ChannelModel | None:
+    async def get_channel_by_id(self, channel_id: UUID, profile_id: UUID) -> ChannelModel | None:
         ...
 
     @abstractmethod
@@ -90,12 +90,16 @@ class ChannelRepository(BaseChannelRepository):
             await session.execute(stmt)
             await session.commit()
 
-    async def get_channel_by_id(self, channel_id: UUID) -> ChannelModel | None:
+    async def get_channel_by_id(self, channel_id: UUID, profile_id: UUID) -> ChannelModel | None:
         async with self._session as session:
             stmt = (
                 select(ChannelModel)
-                .where(ChannelModel.oid == channel_id)
-                .join(ChannelModel.profiles)
+                .join(ChannelMembersModel, ChannelModel.profiles)
+                .where(
+                    ChannelModel.oid == channel_id,
+                    ChannelMembersModel.profile_id == profile_id,
+                    ChannelModel.is_deleted == False,
+                )
                 .options(contains_eager(ChannelModel.profiles))
             )
             result = await session.execute(stmt)
