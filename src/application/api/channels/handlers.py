@@ -30,13 +30,16 @@ router = APIRouter(tags=["Channels"])
 )
 async def get_all_channels(
     filters: GetAllChannelsFilters = Depends(),
-    _ = Depends(get_current_user),  # FIXME: Its need for protect route. Change to more useful depends without user
+    profile = Depends(get_current_user),
     container: Container = Depends(init_container),
 ) -> GetAllChannelsResponseSchema:
     mediator: Mediator = container.resolve(Mediator)
 
     try:
-        channels, total_count = await mediator.handle_query(GetAllChannelsQuery(filters=filters))
+        channels, total_count = await mediator.handle_query(GetAllChannelsQuery(
+            filters=filters,
+            profile_id=profile.oid,
+        ))
     except ApplicationException as exception:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
     return GetAllChannelsResponseSchema.from_entity(

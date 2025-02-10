@@ -13,6 +13,7 @@ from src.logic.queries.base import BaseQuery, QueryHandler
 @dataclass(frozen=True)
 class GetAllChannelsQuery(BaseQuery):
     filters: GetAllChannelsInfraFilters
+    profile_id: UUID
 
 
 @dataclass(frozen=True)
@@ -20,9 +21,12 @@ class GetAllChannelsQueryHandler(QueryHandler[GetAllChannelsQuery, tuple[Iterabl
     channel_repository: BaseChannelRepository
 
     async def handle(self, query: GetAllChannelsQuery) -> tuple[Iterable[Channel], int]:
-        channel_models, total_count = await self.channel_repository.get_all_channels(filters=query.filters)
+        channel_models, channels_count = await self.channel_repository.get_all_channels(
+            filters=query.filters,
+            profile_id=query.profile_id,
+        )
         channels = list(map(lambda model: convert_channel_model_to_entity(model), channel_models))
-        return channels, total_count
+        return channels, channels_count
 
 
 @dataclass(frozen=True)

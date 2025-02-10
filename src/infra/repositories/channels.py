@@ -16,7 +16,11 @@ from src.infra.repositories.base import BaseRepository
 @dataclass(eq=False, frozen=True)
 class BaseChannelRepository(BaseRepository):
     @abstractmethod
-    async def get_all_channels(self, filters: GetAllChannelsInfraFilters) -> tuple[Sequence[ChannelModel], int]:
+    async def get_all_channels(
+        self,
+        filters: GetAllChannelsInfraFilters,
+        profile_id: UUID,
+    ) -> tuple[Sequence[ChannelModel], int]:
         ...
 
     @abstractmethod
@@ -42,20 +46,32 @@ class BaseChannelRepository(BaseRepository):
 
 @dataclass(eq=False, frozen=True)
 class ChannelRepository(BaseChannelRepository):
-    async def get_all_channels(self, filters: GetAllChannelsInfraFilters) -> tuple[Sequence[ChannelModel], int]:
+    async def get_all_channels(
+        self,
+        filters: GetAllChannelsInfraFilters,
+        profile_id: UUID,
+    ) -> tuple[Sequence[ChannelModel], int]:
         async with self._session as session:
-            stmt = (
+            channels_stmt = (
                 select(ChannelModel)
-                .join(ChannelModel.profiles)
+                .join(ChannelMembersModel, ChannelModel.profiles)
+                .where(ChannelMembersModel.profile_id == profile_id, ChannelModel.is_deleted == False)
                 .options(contains_eager(ChannelModel.profiles))
                 .limit(filters.limit)
                 .offset(filters.offset)
             )
-            result = await session.execute(stmt)
-            items = result.unique().scalars().all()
-            total_count = await session.scalar(select(func.count()).select_from(ChannelModel))
+            result = await session.execute(channels_stmt)
+            channels = result.unique().scalars().all()
 
-            return items, total_count
+            channels_count_stmt = (
+                select(func.count())
+                .select_from(ChannelModel)
+                .join(ChannelMembersModel, ChannelModel.profiles)
+                .where(ChannelMembersModel.profile_id == profile_id)
+            )
+            channels_count = await session.scalar(channels_count_stmt)
+
+            return channels, channels_count
 
     async def create(self, author: Profile, channel: Channel) -> ChannelModel:
         async with self._session as session:
