@@ -6,26 +6,15 @@ from src.infra.repositories.channels import BaseChannelRepository, ChannelReposi
 from src.infra.repositories.users import UserUoW
 from src.infra.services.jwt import BaseJWTService, JWTService
 from src.infra.services.redis import BaseRedisService, RedisService
-from src.logic.commands.auth import (
-	ExtractProfileFromJWTTokenCommand,
-	ExtractProfileFromJWTTokenHandler,
-	LoginCommand,
-	LoginCommandHandler,
-	RefreshTokensCommand,
-	RefreshTokensCommandHandler,
-	RegisterCommandHandler,
-	RegisterCommand,
-)
-from src.logic.commands.channels import (
-    CreateChannelCommand,
-    CreateChannelCommandHandler,
-    DeleteChannelCommand,
-    DeleteChannelCommandHandler,
-    UpdateChannelCommand,
-    UpdateChannelCommandHandler,
-)
+from src.logic.commands.auth import ExtractProfileFromJWTTokenCommand, ExtractProfileFromJWTTokenHandler, \
+    LoginCommand, LoginCommandHandler, RefreshTokensCommand, RefreshTokensCommandHandler, RegisterCommandHandler, \
+	RegisterCommand
+from src.logic.commands.channels import ConnectToChannelCommand, ConnectToChannelCommandHandler, CreateChannelCommand, \
+    CreateChannelCommandHandler, DeleteChannelCommand, DeleteChannelCommandHandler, UpdateChannelCommand, \
+    UpdateChannelCommandHandler
 from src.logic.init.mediator import Mediator
-from src.logic.queries.channels import GetAllChannelsQuery, GetAllChannelsQueryHandler, GetChannelByOidQuery, GetChannelByOidQueryHandler
+from src.logic.queries.channels import GetAllChannelsQuery, GetAllChannelsQueryHandler, GetChannelByOidQuery, \
+    GetChannelByOidQueryHandler
 from src.settings.config import settings
 
 
@@ -85,6 +74,9 @@ def _init_container() -> Container:
         delete_channel_handler = DeleteChannelCommandHandler(
             channel_repository=container.resolve(BaseChannelRepository),
         )
+        connect_to_channel_handler = ConnectToChannelCommandHandler(
+            channel_repository=container.resolve(BaseChannelRepository),
+        )
 
         mediator.register_command(
             command=RegisterCommand,
@@ -121,6 +113,10 @@ def _init_container() -> Container:
         mediator.register_command(
             command=DeleteChannelCommand,
             command_handlers=[delete_channel_handler],
+        )
+        mediator.register_command(
+            command=ConnectToChannelCommand,
+            command_handlers=[connect_to_channel_handler],
         )
 
         return mediator

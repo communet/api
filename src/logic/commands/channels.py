@@ -5,12 +5,12 @@ from src.domain.entities.channels import Channel
 from src.domain.entities.users import Profile
 from src.infra.converters.channels import convert_channel_model_to_entity
 from src.infra.repositories.channels import BaseChannelRepository
-from src.logic.commands.base import CommandHandler
-from src.logic.exceptions.channels import ChannelDoesNotExistsException
+from src.logic.commands.base import BaseCommand, CommandHandler
+from src.logic.exceptions.channels import ChannelDoesNotExistsException, UserAlreadyMemberException
 
 
 @dataclass(frozen=True)
-class CreateChannelCommand:
+class CreateChannelCommand(BaseCommand):
     name: str
     description: str | None
     author: Profile
@@ -34,7 +34,7 @@ class CreateChannelCommandHandler(CommandHandler[CreateChannelCommand, Channel])
 
 
 @dataclass(frozen=True)
-class UpdateChannelCommand:
+class UpdateChannelCommand(BaseCommand):
     channel_id: UUID
     name: str | None
     description: str | None
@@ -63,7 +63,7 @@ class UpdateChannelCommandHandler(CommandHandler[UpdateChannelCommand, Channel])
 
 
 @dataclass(frozen=True)
-class DeleteChannelCommand:
+class DeleteChannelCommand(BaseCommand):
     channel_id: UUID
 
 
@@ -81,3 +81,28 @@ class DeleteChannelCommandHandler(CommandHandler[DeleteChannelCommand, None]):
         channel.delete()
 
         await self.channel_repository.delete_channel_by_id(channel_id=command.channel_id)
+
+
+@dataclass(frozen=True)
+class ConnectToChannelCommand(BaseCommand):
+    channel_id: UUID
+    profile_id: UUID
+
+
+@dataclass(frozen=True)
+class ConnectToChannelCommandHandler(CommandHandler[ConnectToChannelCommand, Channel]):
+    channel_repository: BaseChannelRepository
+
+    async def handle(self, command: ConnectToChannelCommand) -> Channel:
+        channel_model = await self.channel_repository.get_channel_by_id(channel_id=command.channel_id)
+        if not channel_model:
+            raise ChannelDoesNotExistsException(channel_id=command.channel_id)
+
+        joined = await self.channel_repository.connect_to_channel(
+            channel_id=command.channel_id,
+            profile_id=command.profile_id,
+        )
+        if not joined:
+            raise UserAlreadyMemberException(channel_id=command.channel_id, profile_id=command.profile_id)
+
+        return convert_channel_model_to_entity(channel_model)

@@ -35,6 +35,10 @@ class BaseChannelRepository(BaseRepository):
     async def create(self, author: Profile, channel: Channel) -> ChannelModel:
         ...
 
+    @abstractmethod
+    async def connect_to_channel(self, channel_id: UUID, profile_id: UUID) -> bool:
+        ...
+
 
 @dataclass(eq=False, frozen=True)
 class ChannelRepository(BaseChannelRepository):
@@ -102,3 +106,21 @@ class ChannelRepository(BaseChannelRepository):
             stmt = update(ChannelModel).where(ChannelModel.oid == channel_id).values(is_deleted=True)
             await session.execute(stmt)
             await session.commit()
+
+    async def connect_to_channel(self, channel_id: UUID, profile_id: UUID) -> bool:
+        async with self._session as session:
+            stmt = (
+                select(ChannelMembersModel)
+                .where(ChannelMembersModel.channel_id == channel_id, ChannelMembersModel.profile_id == profile_id)
+            )
+
+            result = await session.execute(stmt)
+            already_member = result.scalar_one_or_none()
+            if already_member:
+                return False
+
+            new_member = ChannelMembersModel(oid=uuid4(), channel_id=channel_id, profile_id=profile_id)
+            session.add(new_member)
+            await session.commit()
+
+            return True

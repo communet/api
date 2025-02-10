@@ -4,18 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from punq import Container
 
 from src.application.api.auth.depends import get_current_user
-from src.application.api.channels.schemas import (
-    CreateChannelRequestSchema,
-    CreateChannelResponseSchema,
-    GetAllChannelsFilters,
-    GetAllChannelsResponseSchema,
-    GetChannelByOidResponseSchema,
-    UpdateChannelRequestSchema,
-    UpdateChannelResponseSchema,
-)
+from src.application.api.channels.schemas import ConnectToChannelResponseSchema, CreateChannelRequestSchema, \
+    CreateChannelResponseSchema, GetAllChannelsFilters, GetAllChannelsResponseSchema, GetChannelByOidResponseSchema, \
+    UpdateChannelRequestSchema, UpdateChannelResponseSchema
 from src.application.api.schemas import ErrorSchema
 from src.domain.exceptions.base import ApplicationException
-from src.logic.commands.channels import CreateChannelCommand, DeleteChannelCommand, UpdateChannelCommand
+from src.logic.commands.channels import ConnectToChannelCommand, CreateChannelCommand, DeleteChannelCommand, \
+    UpdateChannelCommand
 from src.logic.init.container import init_container
 from src.logic.init.mediator import Mediator
 from src.logic.queries.channels import GetAllChannelsQuery, GetChannelByOidQuery
@@ -149,3 +144,29 @@ async def delete_channel(
         await mediator.handle_command(DeleteChannelCommand(channel_id=channel_id))
     except ApplicationException as exception:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
+
+
+@router.post(
+    path='/channels/{channel_id}/join',
+    status_code=status.HTTP_200_OK,
+    description="Connect to exists channel",
+    responses={
+        status.HTTP_200_OK: {"model": ConnectToChannelResponseSchema},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+    },
+)
+async def delete_channel(
+    channel_id: UUID,
+    profile = Depends(get_current_user),
+    container: Container = Depends(init_container),
+) -> ConnectToChannelResponseSchema:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        channel, *_ = await mediator.handle_command(ConnectToChannelCommand(
+            channel_id=channel_id,
+            profile_id=profile.oid,
+        ))
+    except ApplicationException as exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
+    return ConnectToChannelResponseSchema.from_entity(channel)

@@ -66,7 +66,6 @@ class CreateChannelResponseSchema(BaseResponseSchema):
     oid: str
     name: str
     description: str | None
-    members: Iterable
     avatar: str | None
 
     @classmethod
@@ -75,16 +74,6 @@ class CreateChannelResponseSchema(BaseResponseSchema):
             oid=str(entity.oid),
             name=entity.name.as_generic_type(),
             description=entity.description,
-            members=[
-                {
-                    "id": member.oid,
-                    "display_name": member.display_name.as_generic_type(),
-                    "username": member.credentials.username.as_generic_type(),
-                    "email": member.credentials.email.as_generic_type(),
-                    "avatar": member.avatar,
-                }
-                for member in entity.members
-            ],
             avatar=entity.avatar,
 		)
 
@@ -103,6 +92,22 @@ class UpdateChannelResponseSchema(BaseResponseSchema):
 
     @classmethod
     def from_entity(cls, entity: Channel) -> "CreateChannelResponseSchema":
+        return cls(
+            oid=str(entity.oid),
+            name=entity.name.as_generic_type(),
+            description=entity.description,
+            avatar=entity.avatar,
+        )
+
+
+class ConnectToChannelResponseSchema(BaseResponseSchema):
+    oid: str
+    name: str
+    description: str | None
+    avatar: str | None
+
+    @classmethod
+    def from_entity(cls, entity: Channel) -> "ConnectToChannelResponseSchema":
         return cls(
             oid=str(entity.oid),
             name=entity.name.as_generic_type(),
