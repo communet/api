@@ -10,11 +10,11 @@ from src.logic.commands.auth import ExtractProfileFromJWTTokenCommand, ExtractPr
     LoginCommand, LoginCommandHandler, RefreshTokensCommand, RefreshTokensCommandHandler, RegisterCommandHandler, \
 	RegisterCommand
 from src.logic.commands.channels import ConnectToChannelCommand, ConnectToChannelCommandHandler, CreateChannelCommand, \
-    CreateChannelCommandHandler, DeleteChannelCommand, DeleteChannelCommandHandler, DisconnectFromChannelCommand, DisconnectFromChannelCommandHandler, UpdateChannelCommand, \
-    UpdateChannelCommandHandler
+    CreateChannelCommandHandler, DeleteChannelCommand, DeleteChannelCommandHandler, DisconnectFromChannelCommand, \
+    DisconnectFromChannelCommandHandler, UpdateChannelCommand, UpdateChannelCommandHandler
 from src.logic.init.mediator import Mediator
-from src.logic.queries.channels import GetAllChannelsQuery, GetAllChannelsQueryHandler, GetChannelByOidQuery, \
-    GetChannelByOidQueryHandler
+from src.logic.queries.channels import GetAllChannelMembersQuery, GetAllChannelMembersQueryHandler, \
+    GetAllChannelsQuery, GetAllChannelsQueryHandler, GetChannelByOidQuery, GetChannelByOidQueryHandler
 from src.settings.config import settings
 
 
@@ -74,6 +74,9 @@ def _init_container() -> Container:
         delete_channel_handler = DeleteChannelCommandHandler(
             channel_repository=container.resolve(BaseChannelRepository),
         )
+        get_all_members_of_channel_handler = GetAllChannelMembersQueryHandler(
+            channel_repository=container.resolve(BaseChannelRepository),
+        )
         connect_to_channel_handler = ConnectToChannelCommandHandler(
             channel_repository=container.resolve(BaseChannelRepository),
         )
@@ -116,6 +119,10 @@ def _init_container() -> Container:
         mediator.register_command(
             command=DeleteChannelCommand,
             command_handlers=[delete_channel_handler],
+        )
+        mediator.register_query(
+            query=GetAllChannelMembersQuery,
+            query_handler=get_all_members_of_channel_handler,
         )
         mediator.register_command(
             command=ConnectToChannelCommand,

@@ -5,15 +5,15 @@ from punq import Container
 
 from src.application.api.auth.depends import get_current_user
 from src.application.api.channels.schemas import ConnectToChannelResponseSchema, CreateChannelRequestSchema, \
-    CreateChannelResponseSchema, GetAllChannelsFilters, GetAllChannelsResponseSchema, GetChannelByOidResponseSchema, \
-    UpdateChannelRequestSchema, UpdateChannelResponseSchema
+    CreateChannelResponseSchema, GetAllChannelMembersResponse, GetAllChannelsFilters, GetAllChannelsResponseSchema, \
+    GetChannelByOidResponseSchema, UpdateChannelRequestSchema, UpdateChannelResponseSchema
 from src.application.api.schemas import ErrorSchema
 from src.domain.exceptions.base import ApplicationException
-from src.logic.commands.channels import ConnectToChannelCommand, CreateChannelCommand, DeleteChannelCommand, DisconnectFromChannelCommand, \
-    UpdateChannelCommand
+from src.logic.commands.channels import ConnectToChannelCommand, CreateChannelCommand, DeleteChannelCommand, \
+    DisconnectFromChannelCommand, UpdateChannelCommand
 from src.logic.init.container import init_container
 from src.logic.init.mediator import Mediator
-from src.logic.queries.channels import GetAllChannelsQuery, GetChannelByOidQuery
+from src.logic.queries.channels import GetAllChannelMembersQuery, GetAllChannelsQuery, GetChannelByOidQuery
 
 
 router = APIRouter(tags=["Channels"])
@@ -192,3 +192,25 @@ async def disconnect_from_channel(
         await mediator.handle_command(DisconnectFromChannelCommand(channel_id=channel_id, profile_id=profile.oid))
     except ApplicationException as exception:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
+
+
+@router.get(
+    path='/channels/{channel_id}/members',
+    status_code=status.HTTP_200_OK,
+    description='Get all members of channel',
+    responses={
+        status.HTTP_200_OK: {"model": GetAllChannelMembersResponse},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+    },
+)
+async def get_all_channel_members(
+    channel_id: UUID,
+    container: Container = Depends(init_container),
+) -> None:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        members = await mediator.handle_query(GetAllChannelMembersQuery(channel_id=channel_id))
+    except ApplicationException as exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
+    return GetAllChannelMembersResponse.from_entity(members)

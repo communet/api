@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Iterable, Sequence
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select, update
@@ -10,6 +10,7 @@ from src.domain.entities.channels import Channel
 from src.domain.entities.users import Profile
 from src.infra.filters.channels import GetAllChannelsInfraFilters
 from src.infra.models.channels import ChannelMembersModel, ChannelModel
+from src.infra.models.users import ProfileModel
 from src.infra.repositories.base import BaseRepository
 
 
@@ -42,6 +43,10 @@ class BaseChannelRepository(BaseRepository):
 
     @abstractmethod
     async def create(self, author: Profile, channel: Channel) -> ChannelModel:
+        ...
+
+    @abstractmethod
+    async def get_members_by_channel_id(self, channel_id: UUID) -> Iterable[ProfileModel]:
         ...
 
     @abstractmethod
@@ -196,3 +201,22 @@ class ChannelRepository(BaseChannelRepository):
                 result = False
 
             return result
+
+    async def get_members_by_channel_id(self, channel_id: UUID) -> Iterable[ProfileModel]:
+        async with self._session as session:
+            query = (
+                select(ProfileModel)
+                .join(ChannelMembersModel, ProfileModel.oid == ChannelMembersModel.profile_id)
+                .join(ChannelModel, ChannelMembersModel.channel_id == ChannelModel.oid)
+                .where(
+                    ChannelModel.oid == channel_id,
+                    ChannelModel.is_deleted == False,
+                    ChannelMembersModel.is_connected == True,
+                )
+                .options(
+                    contains_eager(ProfileModel.channels),
+                    contains_eager(ProfileModel.credentials),
+                )
+            )
+            result = await session.execute(query)
+            return result.unique().scalars().all()

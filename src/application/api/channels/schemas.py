@@ -113,3 +113,21 @@ class ConnectToChannelResponseSchema(BaseResponseSchema):
             description=entity.description,
             avatar=entity.avatar,
         )
+
+
+class GetAllChannelMembersResponse(BaseResponseSchema):
+    members: list[dict]
+
+    @classmethod
+    def from_entity(cls, entities: Iterable[Profile]) -> "GetAllChannelMembersResponse":
+        return cls(
+            members=[
+                {
+                    'oid': entity.oid,
+                    'display_name': entity.display_name.as_generic_type(),
+                    'username': entity.credentials.username.as_generic_type(),
+                    'email': entity.credentials.email.as_generic_type(),
+                    'avatar': entity.avatar,
+                } for entity in entities
+            ],
+        )
