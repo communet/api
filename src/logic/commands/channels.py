@@ -94,7 +94,10 @@ class ConnectToChannelCommandHandler(CommandHandler[ConnectToChannelCommand, Cha
     channel_repository: BaseChannelRepository
 
     async def handle(self, command: ConnectToChannelCommand) -> Channel:
-        channel_model = await self.channel_repository.get_channel_by_id(channel_id=command.channel_id)
+        channel_model = await self.channel_repository.get_channel_by_id(
+            profile_id=command.profile_id,
+            channel_id=command.channel_id,
+        )
         if not channel_model:
             raise ChannelDoesNotExistsException(channel_id=command.channel_id)
 

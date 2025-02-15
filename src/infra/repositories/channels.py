@@ -55,7 +55,11 @@ class ChannelRepository(BaseChannelRepository):
             channels_stmt = (
                 select(ChannelModel)
                 .join(ChannelMembersModel, ChannelModel.profiles)
-                .where(ChannelMembersModel.profile_id == profile_id, ChannelModel.is_deleted == False)
+                .where(
+                    ChannelMembersModel.profile_id == profile_id,
+                    ChannelMembersModel.is_connected == True,
+                    ChannelModel.is_deleted == False,
+                )
                 .options(contains_eager(ChannelModel.profiles))
                 .limit(filters.limit)
                 .offset(filters.offset)
@@ -111,11 +115,7 @@ class ChannelRepository(BaseChannelRepository):
             stmt = (
                 select(ChannelModel)
                 .join(ChannelMembersModel, ChannelModel.profiles)
-                .where(
-                    ChannelModel.oid == channel_id,
-                    ChannelMembersModel.profile_id == profile_id,
-                    ChannelModel.is_deleted == False,
-                )
+                .where(ChannelModel.oid == channel_id, ChannelModel.is_deleted == False)
                 .options(contains_eager(ChannelModel.profiles))
             )
             result = await session.execute(stmt)
@@ -134,13 +134,19 @@ class ChannelRepository(BaseChannelRepository):
                 .where(ChannelMembersModel.channel_id == channel_id, ChannelMembersModel.profile_id == profile_id)
             )
 
-            result = await session.execute(stmt)
-            already_member = result.scalar_one_or_none()
-            if already_member:
-                return False
+            result = True
+            stmt_result = await session.execute(stmt)
+            row: ChannelMembersModel = stmt_result.scalar_one_or_none()
 
-            new_member = ChannelMembersModel(oid=uuid4(), channel_id=channel_id, profile_id=profile_id)
-            session.add(new_member)
-            await session.commit()
+            if row and row.is_connected:
+                result = False
+            elif row:
+                row.is_connected = True
+                session.add(row)
+                await session.commit()
+            else:
+                new_row = ChannelMembersModel(oid=uuid4(), channel_id=channel_id, profile_id=profile_id)
+                session.add(new_row)
+                await session.commit()
 
-            return True
+            return result

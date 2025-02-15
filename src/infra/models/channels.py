@@ -23,6 +23,7 @@ class ChannelMembersModel(Base):
 
     profile_id: Mapped[UUID] = mapped_column(ForeignKey("profiles.oid", ondelete="CASCADE"), type_=PGUUID(as_uuid=True))
     channel_id: Mapped[UUID] = mapped_column(ForeignKey("channels.oid", ondelete="CASCADE"), type_=PGUUID(as_uuid=True))
+    is_connected: Mapped[bool] = mapped_column(default=True, nullable=False)
     # TODO: add field for roles here
 
     profile: Mapped["ProfileModel"] = relationship(back_populates="channels")
