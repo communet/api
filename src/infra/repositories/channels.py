@@ -43,6 +43,10 @@ class BaseChannelRepository(BaseRepository):
     async def connect_to_channel(self, channel_id: UUID, profile_id: UUID) -> bool:
         ...
 
+    @abstractmethod
+    async def disconnect_from_channel(self, channel_id: UUID, profile_id: UUID) -> bool:
+        ...
+
 
 @dataclass(eq=False, frozen=True)
 class ChannelRepository(BaseChannelRepository):
@@ -148,5 +152,25 @@ class ChannelRepository(BaseChannelRepository):
                 new_row = ChannelMembersModel(oid=uuid4(), channel_id=channel_id, profile_id=profile_id)
                 session.add(new_row)
                 await session.commit()
+
+            return result
+
+    async def disconnect_from_channel(self, channel_id: UUID, profile_id: UUID) -> bool:
+        async with self._session as session:
+            stmt = (
+                select(ChannelMembersModel)
+                .where(ChannelMembersModel.channel_id == channel_id, ChannelMembersModel.profile_id == profile_id)
+            )
+
+            result = True
+            stmt_result = await session.execute(stmt)
+            row: ChannelMembersModel = stmt_result.scalar_one_or_none()
+
+            if row and row.is_connected:
+                row.is_connected = False
+                session.add(row)
+                await session.commit()
+            else:
+                result = False
 
             return result

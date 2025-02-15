@@ -10,7 +10,7 @@ from src.logic.commands.auth import ExtractProfileFromJWTTokenCommand, ExtractPr
     LoginCommand, LoginCommandHandler, RefreshTokensCommand, RefreshTokensCommandHandler, RegisterCommandHandler, \
 	RegisterCommand
 from src.logic.commands.channels import ConnectToChannelCommand, ConnectToChannelCommandHandler, CreateChannelCommand, \
-    CreateChannelCommandHandler, DeleteChannelCommand, DeleteChannelCommandHandler, UpdateChannelCommand, \
+    CreateChannelCommandHandler, DeleteChannelCommand, DeleteChannelCommandHandler, DisconnectFromChannelCommand, DisconnectFromChannelCommandHandler, UpdateChannelCommand, \
     UpdateChannelCommandHandler
 from src.logic.init.mediator import Mediator
 from src.logic.queries.channels import GetAllChannelsQuery, GetAllChannelsQueryHandler, GetChannelByOidQuery, \
@@ -77,6 +77,9 @@ def _init_container() -> Container:
         connect_to_channel_handler = ConnectToChannelCommandHandler(
             channel_repository=container.resolve(BaseChannelRepository),
         )
+        disconnect_from_channel_handler = DisconnectFromChannelCommandHandler(
+            channel_repository=container.resolve(BaseChannelRepository),
+        )
 
         mediator.register_command(
             command=RegisterCommand,
@@ -117,6 +120,10 @@ def _init_container() -> Container:
         mediator.register_command(
             command=ConnectToChannelCommand,
             command_handlers=[connect_to_channel_handler],
+        )
+        mediator.register_command(
+            command=DisconnectFromChannelCommand,
+            command_handlers=[disconnect_from_channel_handler],
         )
 
         return mediator

@@ -21,3 +21,13 @@ class UserAlreadyMemberException(LogicException):
     @property
     def message(self) -> str:
         return f"The user ({str(self.profile_id)}) is already a member of a channel ({str(self.channel_id)})"
+
+
+@dataclass(eq=False)
+class UserAlreadyDisconnectedFromChannelException(LogicException):
+    channel_id: UUID
+    profile_id: UUID
+
+    @property
+    def message(self) -> str:
+        return f"The user ({str(self.profile_id)}) is already disconnected from channel ({str(self.channel_id)})"

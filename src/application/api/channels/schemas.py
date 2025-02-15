@@ -17,7 +17,7 @@ class GetAllChannelsResponseSchema(BaseResponseSchema):
     count: int
     offset: int
     limit: int
-    # FIXME: replace dict to Channel + fix profblem with name field
+    # FIXME: replace dict to Channel + fix problem with name field
     items: list[dict]
 
     @classmethod
@@ -33,7 +33,6 @@ class GetAllChannelsResponseSchema(BaseResponseSchema):
                     "oid": entity.oid,
                     "name": entity.name.as_generic_type(),
                     "description": entity.description,
-                    "is_deleted": entity.is_deleted,
                     "avatar": entity.avatar,
                 } for entity in entities
             ],

@@ -6,7 +6,7 @@ from src.domain.entities.users import Profile
 from src.infra.converters.channels import convert_channel_model_to_entity
 from src.infra.repositories.channels import BaseChannelRepository
 from src.logic.commands.base import BaseCommand, CommandHandler
-from src.logic.exceptions.channels import ChannelDoesNotExistsException, UserAlreadyMemberException
+from src.logic.exceptions.channels import ChannelDoesNotExistsException, UserAlreadyDisconnectedFromChannelException, UserAlreadyMemberException
 
 
 @dataclass(frozen=True)
@@ -109,3 +109,32 @@ class ConnectToChannelCommandHandler(CommandHandler[ConnectToChannelCommand, Cha
             raise UserAlreadyMemberException(channel_id=command.channel_id, profile_id=command.profile_id)
 
         return convert_channel_model_to_entity(channel_model)
+
+
+@dataclass(frozen=True)
+class DisconnectFromChannelCommand(BaseCommand):
+    channel_id: UUID
+    profile_id: UUID
+
+
+@dataclass(frozen=True)
+class DisconnectFromChannelCommandHandler(CommandHandler[DisconnectFromChannelCommand, None]):
+    channel_repository: BaseChannelRepository
+
+    async def handle(self, command: DisconnectFromChannelCommand) -> None:
+        channel_model = await self.channel_repository.get_channel_by_id(
+            profile_id=command.profile_id,
+            channel_id=command.channel_id,
+        )
+        if not channel_model:
+            raise ChannelDoesNotExistsException(channel_id=command.channel_id)
+
+        disconnected = await self.channel_repository.disconnect_from_channel(
+            channel_id=command.channel_id,
+            profile_id=command.profile_id,
+        )
+        if not disconnected:
+            raise UserAlreadyDisconnectedFromChannelException(
+                channel_id=command.channel_id,
+                profile_id=command.profile_id,
+            )

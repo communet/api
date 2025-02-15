@@ -9,7 +9,7 @@ from src.application.api.channels.schemas import ConnectToChannelResponseSchema,
     UpdateChannelRequestSchema, UpdateChannelResponseSchema
 from src.application.api.schemas import ErrorSchema
 from src.domain.exceptions.base import ApplicationException
-from src.logic.commands.channels import ConnectToChannelCommand, CreateChannelCommand, DeleteChannelCommand, \
+from src.logic.commands.channels import ConnectToChannelCommand, CreateChannelCommand, DeleteChannelCommand, DisconnectFromChannelCommand, \
     UpdateChannelCommand
 from src.logic.init.container import init_container
 from src.logic.init.mediator import Mediator
@@ -158,7 +158,7 @@ async def delete_channel(
         status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
     },
 )
-async def delete_channel(
+async def connect_to_channel(
     channel_id: UUID,
     profile = Depends(get_current_user),
     container: Container = Depends(init_container),
@@ -173,3 +173,22 @@ async def delete_channel(
     except ApplicationException as exception:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
     return ConnectToChannelResponseSchema.from_entity(channel)
+
+
+@router.post(
+    path='/channels/{channel_id}/disconnect',
+    status_code=status.HTTP_204_NO_CONTENT,
+    description='Disconnect from channel',
+    responses={status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema}},
+)
+async def disconnect_from_channel(
+    channel_id: UUID,
+    profile = Depends(get_current_user),
+    container: Container = Depends(init_container),
+) -> None:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        await mediator.handle_command(DisconnectFromChannelCommand(channel_id=channel_id, profile_id=profile.oid))
+    except ApplicationException as exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": exception.message})
