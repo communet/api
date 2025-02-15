@@ -43,6 +43,7 @@ class GetChannelByOidQueryHandler(QueryHandler[GetChannelByOidQuery, Channel]):
         channel_model = await self.channel_repository.get_channel_by_id(
             channel_id=query.channel_id,
             profile_id=query.profile_id,
+            check_on_member=True,
         )
 
         if not channel_model:

@@ -24,7 +24,12 @@ class BaseChannelRepository(BaseRepository):
         ...
 
     @abstractmethod
-    async def get_channel_by_id(self, channel_id: UUID, profile_id: UUID) -> ChannelModel | None:
+    async def get_channel_by_id(
+        self,
+        channel_id: UUID,
+        profile_id: UUID,
+        check_on_member: bool = True,
+    ) -> ChannelModel | None:
         ...
 
     @abstractmethod
@@ -114,14 +119,31 @@ class ChannelRepository(BaseChannelRepository):
             await session.execute(stmt)
             await session.commit()
 
-    async def get_channel_by_id(self, channel_id: UUID, profile_id: UUID) -> ChannelModel | None:
+    async def get_channel_by_id(
+        self,
+        channel_id: UUID,
+        profile_id: UUID,
+        check_on_member: bool = True,
+    ) -> ChannelModel | None:
         async with self._session as session:
-            stmt = (
-                select(ChannelModel)
-                .join(ChannelMembersModel, ChannelModel.profiles)
-                .where(ChannelModel.oid == channel_id, ChannelModel.is_deleted == False)
-                .options(contains_eager(ChannelModel.profiles))
-            )
+            if check_on_member:
+                stmt = (
+                    select(ChannelModel)
+                    .join(ChannelMembersModel, ChannelModel.profiles)
+                    .where(
+                        ChannelModel.oid == channel_id,
+                        ChannelMembersModel.profile_id == profile_id,
+                        ChannelModel.is_deleted == False,
+                    )
+                    .options(contains_eager(ChannelModel.profiles))
+                )
+            else:
+                stmt = (
+                    select(ChannelModel)
+                    .join(ChannelMembersModel, ChannelModel.profiles)
+                    .where(ChannelModel.oid == channel_id, ChannelModel.is_deleted == False)
+                    .options(contains_eager(ChannelModel.profiles))
+                )
             result = await session.execute(stmt)
             return result.unique().scalar_one_or_none()
 
